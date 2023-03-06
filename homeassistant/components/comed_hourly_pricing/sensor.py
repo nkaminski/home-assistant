@@ -15,37 +15,47 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_OFFSET, CURRENCY_DOLLAR, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    CONF_CURRENT_HOUR_AVERAGE,
+    CONF_FIVE_MINUTE,
+    CONF_MONITORED_FEED,
+    CONF_MONITORED_FEEDS,
+    CONF_SENSOR_TYPE,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://hourlypricing.comed.com/api"
+_NATIVE_UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
+_SUGGESTED_DISPLAY_PRECISION = 3
+
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-CONF_CURRENT_HOUR_AVERAGE = "current_hour_average"
-CONF_FIVE_MINUTE = "five_minute"
-CONF_MONITORED_FEEDS = "monitored_feeds"
-CONF_SENSOR_TYPE = "type"
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+SENSOR_TYPES = {
+    CONF_FIVE_MINUTE: SensorEntityDescription(
         key=CONF_FIVE_MINUTE,
         name="ComEd 5 Minute Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=_NATIVE_UNIT,
+        suggested_display_precision=_SUGGESTED_DISPLAY_PRECISION,
     ),
-    SensorEntityDescription(
+    CONF_CURRENT_HOUR_AVERAGE: SensorEntityDescription(
         key=CONF_CURRENT_HOUR_AVERAGE,
         name="ComEd Current Hour Average Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=_NATIVE_UNIT,
+        suggested_display_precision=_SUGGESTED_DISPLAY_PRECISION,
     ),
-)
+}
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_KEYS = [SENSOR_TYPES.keys()]
 
 TYPES_SCHEMA = vol.In(SENSOR_KEYS)
 
@@ -68,7 +78,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ComEd Hourly Pricing sensor."""
+    """Set up the ComEd Hourly Pricing sensor from YAML configuration."""
     websession = async_get_clientsession(hass)
 
     entities = [
@@ -76,11 +86,26 @@ async def async_setup_platform(
             websession,
             variable[CONF_OFFSET],
             variable.get(CONF_NAME),
-            description,
+            SENSOR_TYPES[variable[CONF_SENSOR_TYPE]],
         )
         for variable in config[CONF_MONITORED_FEEDS]
-        for description in SENSOR_TYPES
-        if description.key == variable[CONF_SENSOR_TYPE]
+    ]
+
+    async_add_entities(entities, True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the ComEd Hourly Pricing sensor from a configuration entry."""
+    websession = async_get_clientsession(hass)
+    entities = [
+        ComedHourlyPricingSensor(
+            websession,
+            config.data[CONF_OFFSET],
+            None,
+            SENSOR_TYPES[config.data[CONF_MONITORED_FEED]],
+        )
     ]
 
     async_add_entities(entities, True)
@@ -96,6 +121,7 @@ class ComedHourlyPricingSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._attr_unique_id = f"{DOMAIN}_{description.key}"
         self.websession = websession
         if name:
             self._attr_name = name
@@ -117,8 +143,8 @@ class ComedHourlyPricingSensor(SensorEntity):
                     # The API responds with MIME type 'text/html'
                     text = await response.text()
                     data = json.loads(text)
-                    self._attr_native_value = round(
-                        float(data[0]["price"]) + self.offset, 2
+                    self._attr_native_value = (
+                        float(data[0]["price"]) / 100.0 + self.offset
                     )
 
             else:

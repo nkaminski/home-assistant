@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "monitored_feed": "Feed to monitor",
+          "offset": "Price offset (in USD)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This feed is already configured."
+    }
+  },
+  "selector": {
+    "monitored_feed": {
+      "options": {
+        "five_minute": "Five Minute Price",
+        "current_hour_average": "Hourly Average Price"
+      }
+    }
+  }
+}
