@@ -63,6 +63,16 @@ from .const import (  # noqa: F401
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -72,8 +82,8 @@ from .const import (  # noqa: F401
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_REGISTER_VALUES,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -103,6 +113,12 @@ from .const import (  # noqa: F401
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_BOTH,
+    CONF_SWING_MODE_HORIZONTAL,
+    CONF_SWING_MODE_OFF,
+    CONF_SWING_MODE_ON,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_VERTICAL,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
@@ -241,7 +257,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
-                    CONF_HVAC_MODE_VALUES: {
+                    CONF_HVAC_REGISTER_VALUES: {
                         vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
@@ -261,6 +277,64 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                         vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_REGISTER_VALUES: {
+                        vol.Optional(CONF_FAN_MODE_ON): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_LOW): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_MEDIUM): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_HIGH): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_FOCUS): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_MIDDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FAN_MODE_DIFFUSE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_REGISTER_VALUES: {
+                        vol.Optional(CONF_SWING_MODE_ON): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SWING_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SWING_MODE_HORIZONTAL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SWING_MODE_VERTICAL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SWING_MODE_BOTH): vol.Any(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
