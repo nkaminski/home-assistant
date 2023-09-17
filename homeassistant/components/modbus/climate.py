@@ -1,11 +1,26 @@
 """Support for Generic Modbus Thermostats."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 import struct
 from typing import Any, cast
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -31,6 +46,16 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -39,11 +64,17 @@ from .const import (
     CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_REGISTER_VALUES,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
+    CONF_SWING_MODE_BOTH,
+    CONF_SWING_MODE_HORIZONTAL,
+    CONF_SWING_MODE_OFF,
+    CONF_SWING_MODE_ON,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_VERTICAL,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
@@ -75,8 +106,6 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-
     def __init__(
         self,
         hub: ModbusHub,
@@ -92,6 +121,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         self._attr_current_temperature = None
         self._attr_target_temperature = None
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
             if self._unit == "F"
@@ -112,7 +142,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
             self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
-            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
+            mode_value_config = mode_config[CONF_HVAC_REGISTER_VALUES]
 
             for hvac_mode_kw, hvac_mode in (
                 (CONF_HVAC_MODE_OFF, HVACMode.OFF),
@@ -145,6 +175,64 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_register = None
 
+        if CONF_FAN_MODE_REGISTER in config:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            fan_config = config[CONF_FAN_MODE_REGISTER]
+            self._fan_mode_register = fan_config[CONF_ADDRESS]
+            self._attr_fan_modes = cast(list[str], [])
+            self._attr_fan_mode = None
+            self._fan_mode_mapping: list[tuple[int, str]] = []
+            self._fan_mode_write_registers = fan_config[CONF_WRITE_REGISTERS]
+            fan_mode_value_config = fan_config[CONF_HVAC_REGISTER_VALUES]
+
+            for fan_mode_kw, fan_mode in (
+                (CONF_FAN_MODE_ON, FAN_ON),
+                (CONF_FAN_MODE_OFF, FAN_OFF),
+                (CONF_FAN_MODE_AUTO, FAN_AUTO),
+                (CONF_FAN_MODE_LOW, FAN_LOW),
+                (CONF_FAN_MODE_MEDIUM, FAN_MEDIUM),
+                (CONF_FAN_MODE_HIGH, FAN_HIGH),
+                (CONF_FAN_MODE_MIDDLE, FAN_MIDDLE),
+                (CONF_FAN_MODE_FOCUS, FAN_FOCUS),
+                (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
+            ):
+                if fan_mode_kw in fan_mode_value_config:
+                    values = fan_mode_value_config[fan_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._fan_mode_mapping.append((value, fan_mode))
+                    self._attr_fan_modes.append(fan_mode)
+        else:
+            self._fan_mode_register = None
+
+        if CONF_SWING_MODE_REGISTER in config:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+            swing_config = config[CONF_SWING_MODE_REGISTER]
+            self._swing_mode_register = swing_config[CONF_ADDRESS]
+            self._attr_swing_modes = cast(list[str], [])
+            self._attr_swing_mode = None
+            self._swing_mode_mapping: list[tuple[int, str]] = []
+            self._swing_mode_write_registers = swing_config[CONF_WRITE_REGISTERS]
+            swing_mode_value_config = swing_config[CONF_HVAC_REGISTER_VALUES]
+
+            for swing_mode_kw, swing_mode in (
+                (CONF_SWING_MODE_ON, SWING_ON),
+                (CONF_SWING_MODE_OFF, SWING_OFF),
+                (CONF_SWING_MODE_HORIZONTAL, SWING_HORIZONTAL),
+                (CONF_SWING_MODE_VERTICAL, SWING_VERTICAL),
+                (CONF_SWING_MODE_BOTH, SWING_BOTH),
+            ):
+                if swing_mode_kw in swing_mode_value_config:
+                    values = swing_mode_value_config[swing_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._swing_mode_mapping.append((value, swing_mode))
+                    self._attr_swing_modes.append(swing_mode)
+        else:
+            self._swing_mode_register = None
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -172,7 +260,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 )
 
         if self._hvac_mode_register is not None:
-            # Write a value to the mode register for the desired mode.
+            # Write a value to the HVAC mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
                 if mode == hvac_mode:
                     if self._hvac_mode_write_registers:
@@ -242,8 +330,54 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_available = result is not None
         await self.async_update()
 
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        if self._fan_mode_register is not None:
+            # Write a value to the fan mode register for the desired mode.
+            for value, mode in self._fan_mode_mapping:
+                if mode == fan_mode:
+                    if self._fan_mode_write_registers:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._fan_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._fan_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+        await self.async_update()
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing operation."""
+        if self._swing_mode_register is not None:
+            # Write a value to the swing mode register for the desired mode.
+            for value, mode in self._swing_mode_mapping:
+                if mode == swing_mode:
+                    if self._swing_mode_write_registers:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+        await self.async_update()
+
     async def async_update(self, now: datetime | None = None) -> None:
-        """Update Target & Current Temperature."""
+        """Update target and current temperatures as well as fan and swing states if applicable."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
 
@@ -254,7 +388,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._input_type, self._address
         )
 
-        # Read the mode register if defined
+        # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
@@ -262,11 +396,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
             # Translate the value received
             if hvac_mode is not None:
-                self._attr_hvac_mode = None
-                for value, mode in self._hvac_mode_mapping:
-                    if hvac_mode == value:
-                        self._attr_hvac_mode = mode
-                        break
+                self._attr_hvac_mode = cast(
+                    HVACMode | None,
+                    await self._async_translate_mapped_value(
+                        self._hvac_mode_mapping, cast(int, hvac_mode)
+                    ),
+                )
 
         # Read th on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
@@ -278,11 +413,35 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
+        # Read the fan register if defined
+        if self._fan_mode_register is not None:
+            fan_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._fan_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if fan_mode is not None:
+                self._attr_fan_mode = await self._async_translate_mapped_value(
+                    self._fan_mode_mapping, cast(int, fan_mode)
+                )
+
+        # Read the swing mode register if defined
+        if self._swing_mode_register is not None:
+            swing_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._swing_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if swing_mode is not None:
+                self._attr_swing_mode = await self._async_translate_mapped_value(
+                    self._swing_mode_mapping, cast(int, swing_mode)
+                )
+
         self.async_write_ha_state()
 
     async def _async_read_register(
         self, register_type: str, register: int, raw: bool | None = False
-    ) -> float | None:
+    ) -> float | int | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(
             self._slave, register, self._count, register_type
@@ -310,3 +469,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return None
         self._attr_available = True
         return float(self._value)
+
+    async def _async_translate_mapped_value(
+        self, mapping: Sequence[tuple[int, HVACMode | str]], mapped_value: int
+    ) -> HVACMode | str | None:
+        """Translate modbus mapped value to corresponding representation in HA."""
+        for value, mode in mapping:
+            if mapped_value == value:
+                return mode
+        return None
