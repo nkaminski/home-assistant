@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-import json
 import logging
 
 import aiohttp
@@ -17,6 +16,8 @@ from .const import (
     CONF_FIVE_MINUTE,
     CONF_MONITORED_FEED,
     DOMAIN,
+    REQUEST_TIMEOUT_SECONDS,
+    UPDATE_INTERVAL_MINUTES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,11 +44,10 @@ class ComedApiClient:
 
         url_string = f"{_RESOURCE}?type={_URL_MAP[sensor_type]}"
 
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(REQUEST_TIMEOUT_SECONDS):
             response = await self._session.get(url_string)
             response.raise_for_status()
-            text = await response.text()
-            data = json.loads(text)
+            data = await response.json()
             return float(data[0]["price"]) / 100.0
 
 
@@ -62,7 +62,7 @@ class ComedDataUpdateCoordinator(DataUpdateCoordinator[float]):
         config_entry: ConfigEntry,
         client: ComedApiClient,
     ) -> None:
-        """Initialize."""
+        """Initialize the ComEd Hourlypricing data update coordinator."""
         self.client = client
         self.sensor_type = config_entry.data[CONF_MONITORED_FEED]
         self.offset: float = config_entry.data.get(CONF_OFFSET, 0.0)
@@ -72,11 +72,11 @@ class ComedDataUpdateCoordinator(DataUpdateCoordinator[float]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
         )
 
     async def _async_update_data(self) -> float:
-        """Update data via API."""
+        """Update price data via the ComEd API."""
         try:
             price = await self.client.get_data(self.sensor_type)
             return price + self.offset

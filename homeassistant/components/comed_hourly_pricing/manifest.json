@@ -1,7 +1,7 @@
 {
   "domain": "comed_hourly_pricing",
   "name": "ComEd Hourly Pricing",
-  "codeowners": ["@home-assistant/core"],
+  "codeowners": ["@nkaminski"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/comed_hourly_pricing",
   "integration_type": "service",

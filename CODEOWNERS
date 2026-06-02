@@ -318,8 +318,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
-/homeassistant/components/comed_hourly_pricing/ @home-assistant/core
-/tests/components/comed_hourly_pricing/ @home-assistant/core
+/homeassistant/components/comed_hourly_pricing/ @nkaminski
+/tests/components/comed_hourly_pricing/ @nkaminski
 /homeassistant/components/comelit/ @chemelli74
 /tests/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts

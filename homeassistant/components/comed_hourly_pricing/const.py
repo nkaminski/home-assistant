@@ -10,3 +10,8 @@ CONF_FIVE_MINUTE = "five_minute"
 CONF_MONITORED_FEED = "monitored_feed"
 CONF_MONITORED_FEEDS = "monitored_feeds"
 CONF_SENSOR_TYPE = "type"
+
+# Update interval and request timeouts for the ComEd
+# pricing data
+UPDATE_INTERVAL_MINUTES = 5
+REQUEST_TIMEOUT_SECONDS = 10
