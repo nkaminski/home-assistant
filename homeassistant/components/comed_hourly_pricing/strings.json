@@ -12,6 +12,10 @@
         "data": {
           "monitored_feed": "Feed to monitor",
           "offset": "Price offset (in USD)"
+        },
+        "data_description": {
+          "monitored_feed": "Select the ComEd hourly pricing feed you wish to monitor.",
+          "offset": "Optional offset to add to the price."
         }
       }
     }

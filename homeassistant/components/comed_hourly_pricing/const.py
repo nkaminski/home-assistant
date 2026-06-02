@@ -1,5 +1,7 @@
 """Constants for the ComEd hourly pricing integration."""
 
+from datetime import timedelta
+
 DOMAIN = "comed_hourly_pricing"
 PLATFORMS = ["sensor"]
 
@@ -13,5 +15,5 @@ CONF_SENSOR_TYPE = "type"
 
 # Update interval and request timeouts for the ComEd
 # pricing data
-UPDATE_INTERVAL_MINUTES = 5
+SCAN_INTERVAL = timedelta(minutes=5)
 REQUEST_TIMEOUT_SECONDS = 10

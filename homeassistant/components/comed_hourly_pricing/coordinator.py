@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for ComEd Hourly Pricing."""
 
 import asyncio
-from datetime import timedelta
 import logging
 
 import aiohttp
@@ -17,7 +16,7 @@ from .const import (
     CONF_MONITORED_FEED,
     DOMAIN,
     REQUEST_TIMEOUT_SECONDS,
-    UPDATE_INTERVAL_MINUTES,
+    SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +71,7 @@ class ComedDataUpdateCoordinator(DataUpdateCoordinator[float]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> float:
