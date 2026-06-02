@@ -134,6 +134,7 @@ FLOWS = {
         "co2signal",
         "coinbase",
         "color_extractor",
+        "comed_hourly_pricing",
         "comelit",
         "compit",
         "control4",

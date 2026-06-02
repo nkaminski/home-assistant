@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by ComEd Hourly Pricing service',
+      'device_class': 'monetary',
+      'friendly_name': 'ComEd Hourly Pricing 5 minute price',
+      'unit_of_measurement': '$/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.comed_hourly_pricing_5_minute_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.025',
+  })
+# ---
+# name: test_sensor.1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.comed_hourly_pricing_5_minute_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '5 minute price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': '5 minute price',
+    'platform': 'comed_hourly_pricing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'five_minute',
+    'unique_id': 'test_entry_id_five_minute',
+    'unit_of_measurement': '$/kWh',
+  })
+# ---

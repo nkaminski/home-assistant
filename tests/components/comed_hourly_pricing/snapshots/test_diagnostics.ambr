@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': 0.025,
+    'entry': dict({
+      'data': dict({
+        'monitored_feed': 'five_minute',
+        'offset': 0.0,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'comed_hourly_pricing',
+      'entry_id': 'test_entry_id',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
